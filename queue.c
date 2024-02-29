@@ -39,7 +39,11 @@ bool q_insert_head(struct list_head *head, char *s)
     element_t *new_ele = malloc(sizeof(element_t));
     if (!new_ele)
         return false;
-    new_ele->value = s;
+    new_ele->value = strdup(s);
+    if (!new_ele->value) {
+        free(new_ele);
+        return false;
+    }
     list_add(&new_ele->list, head);
     return true;
 }
@@ -52,7 +56,12 @@ bool q_insert_tail(struct list_head *head, char *s)
     element_t *new_ele = malloc(sizeof(element_t));
     if (!new_ele)
         return false;
-    new_ele->value = s;
+    new_ele->value = strdup(s);
+    if (!new_ele->value) {
+        free(new_ele);
+        return false;
+    }
+
     list_add_tail(&new_ele->list, head);
     return true;
 }
