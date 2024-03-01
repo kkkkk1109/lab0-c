@@ -61,7 +61,7 @@ bool q_insert_tail(struct list_head *head, char *s)
         return false;
     new_ele->value = strdup(s);
     if (!new_ele->value) {
-        free(new_ele);
+        q_release_element(new_ele);
         return false;
     }
 
