@@ -198,6 +198,23 @@ void q_reverse(struct list_head *head)
 void q_reverseK(struct list_head *head, int k)
 {
     // https://leetcode.com/problems/reverse-nodes-in-k-group/
+    if (!head || list_empty(head))
+        return;
+    int count = 0;
+    struct list_head *cur, *safe, *record;
+    record = head;
+    list_for_each_safe (cur, safe, head) {
+        count++;
+        if (count != k) {
+            continue;
+        }
+        LIST_HEAD(new_head);
+        list_cut_position(&new_head, record, cur);
+        q_reverse(&new_head);
+        list_splice(&new_head, record);
+        record = safe->prev;
+        count = 0;
+    }
 }
 
 /* Sort elements of queue in ascending/descending order */
@@ -253,16 +270,52 @@ void q_sort(struct list_head *head, bool descend)
  * the right side of it */
 int q_ascend(struct list_head *head)
 {
+    if (!head || list_empty(head) || list_is_singular(head))
+        return 0;
+    struct list_head *cur, *big, *tmp;
+    big = head->prev;
+    cur = big;
+    while (cur != head) {
+        tmp = cur->prev;
+        if (strcmp(list_entry(big, element_t, list)->value,
+                   list_entry(cur, element_t, list)->value) < 0) {
+            list_del(cur);
+            q_release_element(list_entry(cur, element_t, list));
+
+        } else if (strcmp(list_entry(big, element_t, list)->value,
+                          list_entry(cur, element_t, list)->value) >= 0) {
+            big = cur;
+        }
+        cur = tmp;
+    }
     // https://leetcode.com/problems/remove-nodes-from-linked-list/
-    return 0;
+    return q_size(head);
 }
 
 /* Remove every node which has a node with a strictly greater value anywhere to
  * the right side of it */
 int q_descend(struct list_head *head)
 {
+    if (!head || list_empty(head) || list_is_singular(head))
+        return 0;
+    struct list_head *cur, *big, *tmp;
+    big = head->prev;
+    cur = big;
+    while (cur != head) {
+        tmp = cur->prev;
+        if (strcmp(list_entry(big, element_t, list)->value,
+                   list_entry(cur, element_t, list)->value) > 0) {
+            list_del(cur);
+            q_release_element(list_entry(cur, element_t, list));
+
+        } else if (strcmp(list_entry(big, element_t, list)->value,
+                          list_entry(cur, element_t, list)->value) <= 0) {
+            big = cur;
+        }
+        cur = tmp;
+    }
     // https://leetcode.com/problems/remove-nodes-from-linked-list/
-    return 0;
+    return q_size(head);
 }
 
 /* Merge all the queues into one sorted queue, which is in ascending/descending
@@ -270,5 +323,34 @@ int q_descend(struct list_head *head)
 int q_merge(struct list_head *head, bool descend)
 {
     // https://leetcode.com/problems/merge-k-sorted-lists/
-    return 0;
+
+    if (!head || list_empty(head))
+        return 0;
+    if (list_is_singular(head))
+        return q_size(list_first_entry(head, queue_contex_t, chain)->q);
+
+    queue_contex_t *first = list_entry(head->next, queue_contex_t, chain);
+    int total_size = first->size;
+    first->q->prev->next = NULL;
+    struct list_head *cur = NULL, *safe, *new, *f_head = first->q;
+    list_for_each_safe (cur, safe, head) {
+        queue_contex_t *cur_ctx = list_entry(cur, queue_contex_t, chain);
+        if (cur_ctx == first)
+            continue;
+
+        total_size += cur_ctx->size;
+        new = cur_ctx->q;
+        new->prev->next = NULL;
+        printf("the count size is %d", total_size);
+        f_head->next = merge_two_nodes(f_head->next, new->next);
+    }
+    printf("end\n");
+
+    while (head != NULL) {
+        head = head->next;
+        printf(" %s| ", list_entry(head, element_t, list)->value);
+    }
+
+
+    return total_size;
 }
