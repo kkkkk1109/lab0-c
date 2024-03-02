@@ -160,6 +160,23 @@ bool q_delete_dup(struct list_head *head)
 void q_swap(struct list_head *head)
 {
     // https://leetcode.com/problems/swap-nodes-in-pairs/
+    int cnt = 0;
+    struct list_head *fir, *mid, *sec;
+    fir = head;
+    list_for_each_safe (mid, sec, head) {
+        if (cnt == 0 && sec != head && mid != head) {
+            fir->next = sec;
+            sec->prev = fir;
+            mid->prev = sec;
+            cnt++;
+            fir = mid;
+        } else if (cnt == 1) {
+            mid->next = fir;
+            fir->next = sec;
+            sec->prev = fir;
+            cnt--;
+        }
+    }
 }
 
 /* Reverse elements in queue */
@@ -182,9 +199,62 @@ void q_reverseK(struct list_head *head, int k)
 {
     // https://leetcode.com/problems/reverse-nodes-in-k-group/
 }
+struct list_head *merge_list(struct list_head *left, struct list_head *head)
+{
+    struct list_head *merge_head = q_new();
+    struct list_head *lf = left->next;
+    struct list_head *hd = head->next;
 
+    INIT_LIST_HEAD(merge_head);
+    while (lf != left || hd != head) {
+        element_t *lv = list_entry(lf, element_t, list);
+        element_t *hv = list_entry(hd, element_t, list);
+        if (strcmp(lv->value, hv->value) > 0) {
+            list_move_tail(hd, merge_head);
+            hd = hd->next;
+        } else if (strcmp(lv->value, hv->value) < 0) {
+            list_move_tail(lf, merge_head);
+            lf = lf->next;
+        } else {
+            list_move_tail(hd, merge_head);
+            list_move_tail(lf, merge_head);
+            hd = hd->next;
+            lf = lf->next;
+        }
+    }
+    if (lf == left) {
+        while (hd != head) {
+            list_move_tail(hd, merge_head);
+            hd = hd->next;
+        }
+    } else if (hd == head) {
+        while (lf != left) {
+            list_move_tail(lf, merge_head);
+            lf = lf->next;
+        }
+    }
+    return merge_head;
+}
 /* Sort elements of queue in ascending/descending order */
-void q_sort(struct list_head *head, bool descend) {}
+void q_sort(struct list_head *head, bool descend)
+{
+    if (!head || list_empty(head) || list_is_singular(head))
+        return;
+    struct list_head *ln, *rn;
+    ln = head->prev;
+    rn = head->next;
+    while (1) {
+        if ((ln == rn) | (rn->next == ln))
+            break;
+        ln = ln->prev;
+        rn = rn->next;
+    }
+
+    struct list_head *left = q_new();
+    list_cut_position(left, head, rn);
+    q_sort(left, descend);
+    q_sort(head, descend);
+}
 
 /* Remove every node which has a node with a strictly less value anywhere to
  * the right side of it */
