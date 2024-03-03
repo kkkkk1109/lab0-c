@@ -137,22 +137,23 @@ bool q_delete_mid(struct list_head *head)
 /* Delete all nodes that have duplicate string */
 bool q_delete_dup(struct list_head *head)
 {
-    if (!head || list_empty(head) || list_is_singular(head))
+    if (!head)
         return false;
-    element_t *cur, *nxt;
-    bool dup = false;
-    list_for_each_entry_safe (cur, nxt, head, list) {
-        if (strcmp(cur->value, nxt->value) == 0 && &nxt->list != head) {
-            list_del(&cur->list);
-            q_release_element(cur);
-            dup = true;
+    if (list_empty(head) || list_is_singular(head))
+        return true;
+    element_t *node, *safe;
+    bool dup = 0;
+    list_for_each_entry_safe (node, safe, head, list) {
+        if (node->list.next != head && !strcmp(safe->value, node->value)) {
+            list_del(&node->list);
+            q_release_element(node);
+            dup = 1;
         } else if (dup) {
-            list_del(&cur->list);
-            q_release_element(cur);
-            dup = false;
+            list_del(&node->list);
+            q_release_element(node);
+            dup = 0;
         }
     }
-    // https://leetcode.com/problems/remove-duplicates-from-sorted-list-ii/
     return true;
 }
 
@@ -270,23 +271,26 @@ void q_sort(struct list_head *head, bool descend)
  * the right side of it */
 int q_ascend(struct list_head *head)
 {
-    if (!head || list_empty(head) || list_is_singular(head))
+    if (!head || list_empty(head))
         return 0;
-    struct list_head *cur, *big, *tmp;
-    big = head->prev;
-    cur = big;
+    if (list_is_singular(head))
+        return 1;
+
+    struct list_head *cur, *min;
+    min = head->prev;
+    cur = min->prev;
     while (cur != head) {
-        tmp = cur->prev;
-        if (strcmp(list_entry(big, element_t, list)->value,
+        if (strcmp(list_entry(min, element_t, list)->value,
                    list_entry(cur, element_t, list)->value) < 0) {
             list_del(cur);
             q_release_element(list_entry(cur, element_t, list));
+            cur = min->prev;
 
-        } else if (strcmp(list_entry(big, element_t, list)->value,
+        } else if (strcmp(list_entry(min, element_t, list)->value,
                           list_entry(cur, element_t, list)->value) >= 0) {
-            big = cur;
+            min = cur;
+            cur = cur->prev;
         }
-        cur = tmp;
     }
     // https://leetcode.com/problems/remove-nodes-from-linked-list/
     return q_size(head);
@@ -296,23 +300,26 @@ int q_ascend(struct list_head *head)
  * the right side of it */
 int q_descend(struct list_head *head)
 {
-    if (!head || list_empty(head) || list_is_singular(head))
+    if (!head || list_empty(head))
         return 0;
-    struct list_head *cur, *big, *tmp;
+    if (list_is_singular(head))
+        return 1;
+    struct list_head *cur, *big;
     big = head->prev;
-    cur = big;
+    cur = big->prev;
     while (cur != head) {
-        tmp = cur->prev;
         if (strcmp(list_entry(big, element_t, list)->value,
                    list_entry(cur, element_t, list)->value) > 0) {
             list_del(cur);
             q_release_element(list_entry(cur, element_t, list));
+            cur = big->prev;
+
 
         } else if (strcmp(list_entry(big, element_t, list)->value,
                           list_entry(cur, element_t, list)->value) <= 0) {
             big = cur;
+            cur = cur->prev;
         }
-        cur = tmp;
     }
     // https://leetcode.com/problems/remove-nodes-from-linked-list/
     return q_size(head);
