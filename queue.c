@@ -326,31 +326,29 @@ int q_merge(struct list_head *head, bool descend)
 
     if (!head || list_empty(head))
         return 0;
-    if (list_is_singular(head))
-        return q_size(list_first_entry(head, queue_contex_t, chain)->q);
 
-    queue_contex_t *first = list_entry(head->next, queue_contex_t, chain);
-    int total_size = first->size;
-    first->q->prev->next = NULL;
-    struct list_head *cur = NULL, *safe, *new, *f_head = first->q;
-    list_for_each_safe (cur, safe, head) {
-        queue_contex_t *cur_ctx = list_entry(cur, queue_contex_t, chain);
-        if (cur_ctx == first)
-            continue;
+    int total_size = 0;
+    struct list_head *first = list_entry(head->next, queue_contex_t, chain)->q;
+    total_size += q_size(first);
+    first->prev->next = NULL;
+    struct list_head *node = head->next->next;
 
-        total_size += cur_ctx->size;
-        new = cur_ctx->q;
-        new->prev->next = NULL;
-        printf("the count size is %d", total_size);
-        f_head->next = merge_two_nodes(f_head->next, new->next);
-    }
-    printf("end\n");
-
-    while (head != NULL) {
-        head = head->next;
-        printf(" %s| ", list_entry(head, element_t, list)->value);
+    while (node != head) {
+        struct list_head *add_q = list_entry(node, queue_contex_t, chain)->q;
+        total_size += q_size(add_q);
+        add_q->prev->next = NULL;
+        first->next = merge_two_nodes(first->next, add_q->next);
+        INIT_LIST_HEAD(add_q);
+        node = node->next;
     }
 
+    struct list_head *before = first, *after = first->next;
+    for (; after != NULL; after = after->next) {
+        after->prev = before;
+        before = after;
+    }
+    before->next = first;
+    first->prev = before;
 
     return total_size;
 }
