@@ -359,3 +359,35 @@ int q_merge(struct list_head *head, bool descend)
 
     return total_size;
 }
+
+void q_shuffle(struct list_head *head)
+{
+    if (!head || list_empty(head) || list_is_singular(head))
+        return;
+    struct list_head *new = head->prev, *tmp = new->prev;
+    int size = q_size(head);
+    for (; new != head &&size; new = tmp, tmp = tmp->prev, size--) {
+        struct list_head *old = head->next;
+        int random = rand() % (size + 1);
+        for (; random > 0; random--)
+            old = old->next;
+
+        if (old == new)
+            continue;
+        // swap
+        struct list_head *prev1 = old->prev;
+        struct list_head *prev2 = new->prev;
+        if (old->next == new) {
+            list_del(new);
+            list_add(new, prev1);
+        } else if (new->next == old) {
+            list_del(old);
+            list_add(old, prev2);
+        } else {
+            list_del(new);
+            list_del(old);
+            list_add(new, prev1);
+            list_add(old, prev2);
+        }
+    }
+}
