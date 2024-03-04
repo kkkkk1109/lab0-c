@@ -82,5 +82,8 @@ clean:
 
 distclean: clean
 	rm -f .cmd_history
-
+	
+check-massif: qtest
+	valgrind --tool=massif ./$< -v 3 -f traces/trace-massif.cmd
+       
 -include $(deps)
