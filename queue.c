@@ -395,9 +395,6 @@ void q_shuffle(struct list_head *head)
         if (old->next == new) {
             list_del(new);
             list_add(new, prev1);
-        } else if (new->next == old) {
-            list_del(old);
-            list_add(old, prev2);
         } else {
             list_del(new);
             list_del(old);
